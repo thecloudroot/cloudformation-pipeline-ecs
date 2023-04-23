@@ -44,10 +44,6 @@ Parameters:
     Description: Name of your CodeBuild project
     Type: String
     Default: MyCodeBuildProject
-  ContainerName: 
-    Description: Name of the container on your task definition.
-    Type: String
-
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -66,7 +62,6 @@ Metadata:
           - BuildName
           - ECSClusterName
           - ECSServiceName
-          - ContainerName
           - ECRName
           - RepoURI
 
@@ -202,8 +197,6 @@ Resources:
               Value: !Ref RepoURI
             - Name: IMAGE_TAG
               Value: latest
-            - Name: CONTAINER_NAME
-              Value: !Ref ContainerName
           PrivilegedMode: true
 
 ### Deploy
