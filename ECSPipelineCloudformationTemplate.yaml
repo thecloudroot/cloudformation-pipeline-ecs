@@ -36,10 +36,10 @@ Parameters:
   RepoURI:
     Description: RepositoryURI of your ECR
     Type: String
+    Default: 12345678910.dkr.ecr.us-east-1.amazonaws.com/ECR
   ECRName:
     Description: Name of your ECR 
     Type: String
-    Default: 12345678910.dkr.ecr.us-east-1.amazonaws.com/ECR
   BuildName:
     Description: Name of your CodeBuild project
     Type: String
@@ -110,7 +110,7 @@ Resources:
       GroupDescription: "ECS instance security group"
       SecurityGroupIngress:
         - IpProtocol: "tcp"
-          FromPort: 22
+          FromPort: 22CodePipelineRole
           ToPort: 22
           CidrIp: "0.0.0.0/0"
         - IpProtocol: "tcp"
@@ -219,6 +219,7 @@ Resources:
     Properties:
       ApplicationName: !Ref CodeDeployApp
       ComputePlatform: ECS
+      ServiceRole: !Ref CodeDeployRole
 
 ### Pipeline
   CodePipeline:
@@ -281,6 +282,7 @@ Resources:
           Configuration: 
             ClusterName: !Ref ECSClusterName
             ServiceName: !Ref ECSServiceName
+            CodeDeployApplication: !Ref CodeDeployApplication
           Region: "us-east-1"
           InputArtifacts: 
           - 
