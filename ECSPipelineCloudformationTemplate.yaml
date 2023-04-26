@@ -47,6 +47,10 @@ Parameters:
   ContainerName: 
     Description: Name of the container on your task definition.
     Type: String
+  FileName:
+    Description: ECS file name
+    Type: String
+    Default: imagedefinitions.json
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -59,6 +63,7 @@ Metadata:
           - VpcId
           - Owner
           - PipelineRepository
+          - FileName
       - Label:
           default: "CodeBuild Variables"
         Parameters:
@@ -136,19 +141,6 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AdministratorAccess
 
-  CodeDeployRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: codedeploy.amazonaws.com
-          Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess 
-
 ### Build
   CodeBuild:
     Type: AWS::CodeBuild::Project
@@ -187,22 +179,6 @@ Resources:
               Value: !Ref ContainerName
           PrivilegedMode: true
 
-### Deploy
-  CodeDeployApp:
-    Type: "AWS::CodeDeploy::DeploymentConfig"
-    Properties:
-      DeploymentConfigName: !Join ["-", [!Ref Environment,!Ref ProjectName,"config"]]
-      MinimumHealthyHosts:
-        Type: "FLEET_PERCENT"
-        Value: 50
-
-  CodeDeployApplication:
-    Type: AWS::CodeDeploy::Application
-    Properties:
-      ApplicationName: !Ref CodeDeployApp
-      ComputePlatform: ECS
-      ServiceRole: !Ref CodeDeployRole
-
 ### Pipeline
   CodePipeline:
     Type: "AWS::CodePipeline::Pipeline"
@@ -228,7 +204,7 @@ Resources:
             OutputArtifactFormat: CODEBUILD_CLONE_REF
             PollForSourceChanges: "false"
             RepositoryName: !Ref PipelineRepository
-          Region: "us-east-1"
+          Region: !Ref AWS::Region
           OutputArtifacts: 
           - 
             Name: "pipelinecode"            
@@ -244,7 +220,7 @@ Resources:
             Version: "1"
           Configuration: 
             ProjectName: !Ref CodeBuild
-          Region: "us-east-1"
+          Region: !Ref AWS::Region
           InputArtifacts: 
           - 
             Name: "pipelinecode"   
@@ -264,13 +240,8 @@ Resources:
           Configuration: 
             ClusterName: !Ref ECSClusterName
             ServiceName: !Ref ECSServiceName
-            CodeDeployApplication: !Ref CodeDeployApplication
-          Region: "us-east-1"
+            FileName: !Ref FileName
+          Region: !Ref AWS::Region
           InputArtifacts: 
           - 
             Name: "BuildArtifact"
-
-
-Outputs:
-  CodeDeployDeploymentGroup:
-    Value: !Ref CodeDeployApplication
